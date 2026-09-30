@@ -104,25 +104,146 @@ const elements = {
   compareThumbnails: document.querySelector("#compare-thumbnail-strip")
 };
 
+class ImageLoadScheduler {
+  constructor() {
+    this.cache = new Map();
+    this.queue = [];
+    this.active = false;
+  }
+
+  load(path) {
+    const cached = this.cache.get(path);
+    if (cached) return cached.promise;
+
+    let resolvePromise;
+    const promise = new Promise((resolve) => { resolvePromise = resolve; });
+    this.cache.set(path, { promise, status: "pending" });
+    this.queue.push({ path, promise, resolve: resolvePromise });
+    this.pump();
+    return promise;
+  }
+
+  cancelQueued() {
+    const queued = this.queue.splice(0);
+    queued.forEach((entry) => {
+      const cached = this.cache.get(entry.path);
+      if (cached && cached.status === "pending") this.cache.delete(entry.path);
+      entry.resolve(false);
+    });
+  }
+
+  prioritize(paths) {
+    const order = new Map(paths.map((path, index) => [path, index]));
+    this.queue.sort((a, b) => {
+      const aRank = order.has(a.path) ? order.get(a.path) : paths.length;
+      const bRank = order.has(b.path) ? order.get(b.path) : paths.length;
+      return aRank - bRank;
+    });
+  }
+
+  pump() {
+    if (this.active || !this.queue.length) return;
+    const entry = this.queue.shift();
+    this.active = true;
+    const image = new Image();
+    const finish = (loaded) => {
+      this.cache.set(entry.path, { promise: entry.promise, status: loaded ? "loaded" : "failed" });
+      entry.resolve(loaded);
+      this.active = false;
+      this.pump();
+    };
+    image.onload = () => finish(true);
+    image.onerror = () => finish(false);
+    image.src = entry.path;
+  }
+}
+
+const imageScheduler = new ImageLoadScheduler();
+let viewerLoadToken = 0;
+
 function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (character) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
   }[character]));
 }
 
-function setImageSource(image, path) {
-  image.onerror = null;
-  image.src = path;
+function scheduleImageElement(image, path, token = null) {
+  image.dataset.imageSrc = path;
+  image.removeAttribute("src");
+  return imageScheduler.load(path).then((loaded) => {
+    if (loaded && (token === null || token === viewerLoadToken) && image.dataset.imageSrc === path) {
+      image.src = path;
+    }
+    return loaded;
+  });
 }
 
 function imageMarkup(path, alt, className = "", extra = "") {
-  return `<img class="${escapeHtml(className)}" src="${escapeHtml(path)}" alt="${escapeHtml(alt)}" ${extra}>`;
+  return `<img class="${escapeHtml(className)}" data-image-src="${escapeHtml(path)}" alt="${escapeHtml(alt)}" ${extra}>`;
 }
 
 function propertyMarkup(properties) {
   return `<dl class="property-list">${properties.map(({ label, value }) => `
     <div class="property"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}
   </dl>`;
+}
+
+function scheduleIndexImages() {
+  imageScheduler.cancelQueued();
+  [...elements.grid.querySelectorAll("img[data-image-src]")].forEach((image) => {
+    scheduleImageElement(image, image.dataset.imageSrc);
+  });
+}
+
+function scheduleViewerAssets(version) {
+  const token = ++viewerLoadToken;
+  const currentIndex = state.activeView;
+  const orderedIndexes = version.views.map((_, index) => (currentIndex + index) % version.views.length);
+  const thumbnailImages = [...elements.thumbnails.querySelectorAll("img[data-image-src]")];
+  const currentView = version.views[currentIndex];
+  const currentGuideImages = [...elements.guides.querySelectorAll("img[data-image-src]")];
+  const priorityPaths = [currentView.render, currentView.geometry, ...currentGuideImages.map((image) => image.dataset.imageSrc)];
+
+  // Active view first: Render always precedes Geometry.
+  scheduleImageElement(elements.render, currentView.render, token);
+  scheduleImageElement(elements.geometry, currentView.geometry, token);
+  currentGuideImages.forEach((image) => scheduleImageElement(image, image.dataset.imageSrc, token));
+
+  // Continue through the remaining views in order, Render before Geometry.
+  orderedIndexes.slice(1).forEach((index) => {
+    const view = version.views[index];
+    scheduleImageElement(thumbnailImages[index], view.render, token);
+    imageScheduler.load(view.geometry);
+  });
+  scheduleImageElement(thumbnailImages[currentIndex], currentView.render, token);
+  imageScheduler.prioritize(priorityPaths);
+}
+
+function scheduleCompareAssets(versionA, versionB) {
+  const token = ++viewerLoadToken;
+  const viewCount = Math.min(versionA.views.length, versionB.views.length);
+  const orderedIndexes = Array.from({ length: viewCount }, (_, index) => (state.compareView + index) % viewCount);
+  const thumbnailImages = [...elements.compareThumbnails.querySelectorAll("img[data-image-src]")];
+  const currentA = versionA.views[state.compareView];
+  const currentB = versionB.views[state.compareView];
+
+  orderedIndexes.forEach((index) => {
+    const viewA = versionA.views[index];
+    const viewB = versionB.views[index];
+    if (index === state.compareView) {
+      scheduleImageElement(thumbnailImages[index], viewA.render, token);
+    } else {
+      scheduleImageElement(thumbnailImages[index], viewA.render, token);
+    }
+    imageScheduler.load(viewA.render);
+    imageScheduler.load(viewB.render);
+    imageScheduler.load(viewA.geometry);
+    imageScheduler.load(viewB.geometry);
+  });
+  imageScheduler.prioritize([
+    state.compareSource === "render" ? currentA.render : currentA.geometry,
+    state.compareSource === "render" ? currentB.render : currentB.geometry
+  ]);
 }
 
 function renderIndex() {
@@ -140,6 +261,7 @@ function renderIndex() {
   elements.startCompare.setAttribute("aria-pressed", String(state.compareMode));
   elements.startCompare.textContent = state.compareMode ? "Exit compare mode" : "Compare versions";
   elements.confirmCompare.disabled = state.compareSelection.length !== 2;
+  scheduleIndexImages();
 }
 
 function renderViewer() {
@@ -174,8 +296,9 @@ function renderViewer() {
       elements.frame.style.aspectRatio = `${elements.render.naturalWidth} / ${elements.render.naturalHeight}`;
     }
   };
-  setImageSource(elements.render, view.render);
-  setImageSource(elements.geometry, view.geometry);
+  elements.render.removeAttribute("src");
+  elements.geometry.removeAttribute("src");
+  scheduleViewerAssets(version);
   updateComparison();
 }
 
@@ -198,17 +321,17 @@ function updateCompareComparison() {
   elements.compareWipeSlider.value = wipe;
   elements.compareSourceToggle.textContent = source === "render" ? "Show Geometry" : "Show Render";
   elements.compareSourceToggle.setAttribute("aria-pressed", String(source === "geometry"));
-  if (elements.compareLeftImage.getAttribute("src") !== leftPath) {
+  if (elements.compareLeftImage.dataset.imageSrc !== leftPath) {
     elements.compareFrame.style.aspectRatio = "16 / 9";
     elements.compareLeftImage.onload = () => {
       if (elements.compareLeftImage.naturalWidth && elements.compareLeftImage.naturalHeight) {
         elements.compareFrame.style.aspectRatio = `${elements.compareLeftImage.naturalWidth} / ${elements.compareLeftImage.naturalHeight}`;
       }
     };
-    setImageSource(elements.compareLeftImage, leftPath);
+    scheduleImageElement(elements.compareLeftImage, leftPath, viewerLoadToken);
   }
-  if (elements.compareRightImage.getAttribute("src") !== rightPath) {
-    setImageSource(elements.compareRightImage, rightPath);
+  if (elements.compareRightImage.dataset.imageSrc !== rightPath) {
+    scheduleImageElement(elements.compareRightImage, rightPath, viewerLoadToken);
   }
 }
 
@@ -223,6 +346,7 @@ function renderCompareViewer() {
       ${imageMarkup(view.render, "", "", "loading=\"lazy\"")}
       <span>${escapeHtml(view.name)}</span>
     </button>`).join("");
+  scheduleCompareAssets(versionA, versionB);
   updateCompareComparison();
 }
 
