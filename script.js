@@ -6,7 +6,7 @@ const versions = [
     description: ".",
     properties: [
       { label: "Light position", value: "Table" },
-      { label: "Faceting layout", value: "Low (pavilion) → medium (girdle) → high (crown) → highest (table)" },
+      { label: "Faceting Density Layout", value: "Low density / large faces (pavilion) → medium density / medium faces (girdle) → high density / small faces (crown) → highest density / smallest faces (table)" },
       { label: "Facets height / projection", value: "~14cm" }
     ],
     cover: "public/images/version-01/cover.webp",
@@ -32,7 +32,7 @@ const versions = [
     description: ".",
     properties: [
       { label: "Light position", value: "Crown (middle line)" },
-      { label: "Faceting layout", value: "Low (pavilion) → medium (girdle) → high (crown) → highest (table)" },
+      { label: "Faceting Density Layout", value: "Low density / large faces (pavilion) → medium density / medium faces (girdle) → high density / small faces (crown) → highest density / smallest faces (table)" },
       { label: "Facets height / projection", value: "~14cm" }
     ],
     cover: "public/images/version-02/cover.webp",
