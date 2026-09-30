@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A simple 3D design review viewer." />
+    <title>Version Review for The Jewel</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="app" class="app-shell">
+      <section id="version-index" class="version-index" aria-labelledby="page-title">
+        <header class="page-header">
+          <div class="page-header__topline">
+            <div>
+              <h1 id="page-title">Version Review for The Jewel</h1>
+              <p>Select a version to inspect its renders and geometry.</p>
+            </div>
+            <button id="start-compare" class="button" type="button" aria-pressed="false">Compare versions</button>
+          </div>
+          <div id="compare-toolbar" class="compare-toolbar" hidden>
+            <span>Select two versions.</span>
+            <div class="compare-toolbar__actions">
+              <button id="confirm-compare" class="button" type="button" disabled>Confirm comparison</button>
+              <button id="cancel-compare" class="button" type="button">Cancel</button>
+            </div>
+          </div>
+        </header>
+        <div id="version-grid" class="version-grid"></div>
+      </section>
+
+      <section id="viewer" class="viewer" aria-hidden="true" hidden>
+        <div class="viewer-header">
+          <button id="close-viewer" class="button" type="button">Back</button>
+          <div id="viewer-details" class="viewer-details"></div>
+          <div class="viewer-actions">
+            <button id="expand-viewer" class="button" type="button" aria-pressed="true">Enlarge Guide Images</button>
+          </div>
+        </div>
+
+        <div class="viewer-layout">
+          <section class="comparison-column" aria-label="Render comparison">
+            <div id="comparison-frame" class="comparison-frame" tabindex="0">
+              <img id="geometry-image" class="comparison-image" alt="Geometry view" />
+              <img id="render-image" class="comparison-image render-layer" alt="Final render" />
+              <div id="wipe-divider" class="wipe-divider" aria-hidden="true"></div>
+              <div class="comparison-label comparison-label--left">Render</div>
+              <div class="comparison-label comparison-label--right">Geometry</div>
+              <div id="comparison-loading" class="comparison-loading" hidden>Loading images…</div>
+            </div>
+
+            <div class="comparison-controls">
+              <label id="wipe-control" class="slider-control">
+                <span>Wipe position</span>
+                <input id="wipe-slider" type="range" min="0" max="100" value="97" />
+              </label>
+            </div>
+
+            <div id="thumbnail-strip" class="thumbnail-strip" aria-label="Available views"></div>
+          </section>
+
+          <aside class="guide-column" aria-label="Guide images">
+            <h2>Guides</h2>
+            <div id="guide-grid" class="guide-grid"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="compare-viewer" class="viewer compare-viewer" aria-hidden="true" hidden>
+        <div class="viewer-header compare-viewer-header">
+          <button id="close-compare-viewer" class="button" type="button">Back</button>
+          <div class="compare-version-names" aria-label="Compared versions">
+            <strong id="compare-version-a-name"></strong>
+            <span>vs</span>
+            <strong id="compare-version-b-name"></strong>
+          </div>
+          <div class="viewer-actions"></div>
+        </div>
+
+        <section class="comparison-column compare-viewer-content" aria-label="Version comparison">
+          <div id="compare-frame" class="comparison-frame" tabindex="0">
+            <img id="compare-right-image" class="comparison-image" alt="" />
+            <img id="compare-left-image" class="comparison-image render-layer" alt="" />
+            <div id="compare-divider" class="wipe-divider" aria-hidden="true"></div>
+            <div id="compare-left-label" class="comparison-label comparison-label--left"></div>
+            <div id="compare-right-label" class="comparison-label comparison-label--right"></div>
+          </div>
+
+          <div class="comparison-controls compare-controls">
+            <label class="slider-control">
+              <span>Wipe position</span>
+              <input id="compare-wipe-slider" type="range" min="0" max="100" value="97" />
+            </label>
+            <button id="compare-source-toggle" class="button" type="button" aria-pressed="false">Geometry</button>
+          </div>
+
+          <div id="compare-thumbnail-strip" class="thumbnail-strip" aria-label="Available comparison views"></div>
+        </section>
+      </section>
+
+      <div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-label="Enlarged guide image">
+        <button id="close-lightbox" class="button lightbox-close" type="button">Close</button>
+        <img id="lightbox-image" alt="" />
+      </div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
