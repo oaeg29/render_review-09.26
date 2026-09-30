@@ -9,20 +9,20 @@ const versions = [
       { label: "Faceting layout", value: "Low (pavilion) → medium (girdle) → high (crown) → highest (table)" },
       { label: "Facets height / projection", value: "~14cm" }
     ],
-    cover: "public/images/version-01/cover.png",
+    cover: "public/images/version-01/cover.webp",
     overview: {
-      render: "public/images/version-01/overview/render.png",
-      geometry: "public/images/version-01/overview/geometry.png"
+      render: "public/images/version-01/overview/render.webp",
+      geometry: "public/images/version-01/overview/geometry.webp"
     },
     views: [1, 2, 3, 4, 5].map((number) => ({
       id: `view-${String(number).padStart(2, "0")}`,
       name: `View ${String(number).padStart(2, "0")}`,
-      render: `public/images/version-01/view-${String(number).padStart(2, "0")}/render.png`,
-      geometry: `public/images/version-01/view-${String(number).padStart(2, "0")}/geometry.png`,
+      render: `public/images/version-01/view-${String(number).padStart(2, "0")}/render.webp`,
+      geometry: `public/images/version-01/view-${String(number).padStart(2, "0")}/geometry.webp`,
       guides: {
-        top: `public/images/version-01/view-${String(number).padStart(2, "0")}/camera-top.png`,
-        front: `public/images/version-01/view-${String(number).padStart(2, "0")}/camera-front.png`,
-        side: `public/images/version-01/view-${String(number).padStart(2, "0")}/camera-side.png`
+        top: `public/images/version-01/view-${String(number).padStart(2, "0")}/camera-top.webp`,
+        front: `public/images/version-01/view-${String(number).padStart(2, "0")}/camera-front.webp`,
+        side: `public/images/version-01/view-${String(number).padStart(2, "0")}/camera-side.webp`
       }
     }))
   },
@@ -35,20 +35,20 @@ const versions = [
       { label: "Faceting layout", value: "Low (pavilion) → medium (girdle) → high (crown) → highest (table)" },
       { label: "Facets height / projection", value: "~14cm" }
     ],
-    cover: "public/images/version-02/cover.png",
+    cover: "public/images/version-02/cover.webp",
     overview: {
-      render: "public/images/version-02/overview/render.png",
-      geometry: "public/images/version-02/overview/geometry.png"
+      render: "public/images/version-02/overview/render.webp",
+      geometry: "public/images/version-02/overview/geometry.webp"
     },
     views: [1, 2, 3, 4, 5].map((number) => ({
       id: `view-${String(number).padStart(2, "0")}`,
       name: `View ${String(number).padStart(2, "0")}`,
-      render: `public/images/version-02/view-${String(number).padStart(2, "0")}/render.png`,
-      geometry: `public/images/version-02/view-${String(number).padStart(2, "0")}/geometry.png`,
+      render: `public/images/version-02/view-${String(number).padStart(2, "0")}/render.webp`,
+      geometry: `public/images/version-02/view-${String(number).padStart(2, "0")}/geometry.webp`,
       guides: {
-        top: `public/images/version-02/view-${String(number).padStart(2, "0")}/camera-top.png`,
-        front: `public/images/version-02/view-${String(number).padStart(2, "0")}/camera-front.png`,
-        side: `public/images/version-02/view-${String(number).padStart(2, "0")}/camera-side.png`
+        top: `public/images/version-02/view-${String(number).padStart(2, "0")}/camera-top.webp`,
+        front: `public/images/version-02/view-${String(number).padStart(2, "0")}/camera-front.webp`,
+        side: `public/images/version-02/view-${String(number).padStart(2, "0")}/camera-side.webp`
       }
     }))
   }
@@ -110,29 +110,13 @@ function escapeHtml(value) {
   }[character]));
 }
 
-function webpPath(path) {
-  return path.replace(/\.png$/i, ".webp");
-}
-
-function setImageSource(image, pngPath) {
-  image.onerror = () => {
-    image.onerror = null;
-    image.src = pngPath;
-  };
-  image.src = webpPath(pngPath);
+function setImageSource(image, path) {
+  image.onerror = null;
+  image.src = path;
 }
 
 function imageMarkup(path, alt, className = "", extra = "") {
-  return `<img class="${escapeHtml(className)}" src="${escapeHtml(webpPath(path))}" data-fallback-src="${escapeHtml(path)}" alt="${escapeHtml(alt)}" ${extra}>`;
-}
-
-function installImageFallbacks(container) {
-  container.querySelectorAll("img[data-fallback-src]").forEach((image) => {
-    image.addEventListener("error", () => {
-      image.onerror = null;
-      image.src = image.dataset.fallbackSrc;
-    }, { once: true });
-  });
+  return `<img class="${escapeHtml(className)}" src="${escapeHtml(path)}" alt="${escapeHtml(alt)}" ${extra}>`;
 }
 
 function propertyMarkup(properties) {
@@ -156,7 +140,6 @@ function renderIndex() {
   elements.startCompare.setAttribute("aria-pressed", String(state.compareMode));
   elements.startCompare.textContent = state.compareMode ? "Exit compare mode" : "Compare versions";
   elements.confirmCompare.disabled = state.compareSelection.length !== 2;
-  installImageFallbacks(elements.grid);
 }
 
 function renderViewer() {
@@ -191,8 +174,6 @@ function renderViewer() {
       elements.frame.style.aspectRatio = `${elements.render.naturalWidth} / ${elements.render.naturalHeight}`;
     }
   };
-  installImageFallbacks(elements.thumbnails);
-  installImageFallbacks(elements.guides);
   setImageSource(elements.render, view.render);
   setImageSource(elements.geometry, view.geometry);
   updateComparison();
@@ -242,7 +223,6 @@ function renderCompareViewer() {
       ${imageMarkup(view.render, "", "", "loading=\"lazy\"")}
       <span>${escapeHtml(view.name)}</span>
     </button>`).join("");
-  installImageFallbacks(elements.compareThumbnails);
   updateCompareComparison();
 }
 

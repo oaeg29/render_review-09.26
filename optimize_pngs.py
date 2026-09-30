@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Losslessly optimize the site's PNG images in place using oxipng.
+"""Losslessly optimize the site's source PNG images using oxipng.
 
 This script does not resize images or use visually-lossy options. It preserves
 file permissions and timestamps where oxipng supports doing so.
@@ -15,7 +15,7 @@ from pathlib import Path
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
-DEFAULT_IMAGE_DIR = PROJECT_DIR / "public" / "images"
+DEFAULT_IMAGE_DIR = PROJECT_DIR / "public_pngs"
 
 
 def parse_args() -> argparse.Namespace:
@@ -25,7 +25,7 @@ def parse_args() -> argparse.Namespace:
         nargs="?",
         type=Path,
         default=DEFAULT_IMAGE_DIR,
-        help="Directory or PNG file to optimize (default: public/images)",
+        help="Directory or PNG file to optimize (default: public_pngs)",
     )
     parser.add_argument(
         "--dry-run",
