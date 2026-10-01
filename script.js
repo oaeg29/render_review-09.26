@@ -1,5 +1,6 @@
-// Add versions and views here. The UI is generated from this data only.
-const versions = [
+// Generated folder data is preferred. The inline data remains a safe fallback
+// if generated-versions.js has not been generated yet.
+const fallbackVersions = [
   {
     id: "version-01",
     name: "Version 01",
@@ -53,6 +54,8 @@ const versions = [
     }))
   }
 ];
+
+const versions = window.reviewVersions || fallbackVersions;
 
 const state = {
   selectedVersion: null,
@@ -168,6 +171,7 @@ function escapeHtml(value) {
 }
 
 function scheduleImageElement(image, path, token = null) {
+  if (!image || !path) return Promise.resolve(false);
   image.dataset.imageSrc = path;
   image.removeAttribute("src");
   return imageScheduler.load(path).then((loaded) => {
@@ -179,6 +183,7 @@ function scheduleImageElement(image, path, token = null) {
 }
 
 function imageMarkup(path, alt, className = "", extra = "") {
+  if (!path) return "";
   return `<img class="${escapeHtml(className)}" data-image-src="${escapeHtml(path)}" alt="${escapeHtml(alt)}" ${extra}>`;
 }
 
@@ -202,7 +207,7 @@ function scheduleViewerAssets(version) {
   const thumbnailImages = [...elements.thumbnails.querySelectorAll("img[data-image-src]")];
   const currentView = version.views[currentIndex];
   const currentGuideImages = [...elements.guides.querySelectorAll("img[data-image-src]")];
-  const priorityPaths = [currentView.render, currentView.geometry, ...currentGuideImages.map((image) => image.dataset.imageSrc)];
+  const priorityPaths = [currentView.render, currentView.geometry, ...currentGuideImages.map((image) => image.dataset.imageSrc)].filter(Boolean);
 
   // Active view first: Render always precedes Geometry.
   scheduleImageElement(elements.render, currentView.render, token);
@@ -213,7 +218,7 @@ function scheduleViewerAssets(version) {
   orderedIndexes.slice(1).forEach((index) => {
     const view = version.views[index];
     scheduleImageElement(thumbnailImages[index], view.render, token);
-    imageScheduler.load(view.geometry);
+    if (view.geometry) imageScheduler.load(view.geometry);
   });
   scheduleImageElement(thumbnailImages[currentIndex], currentView.render, token);
   imageScheduler.prioritize(priorityPaths);
@@ -235,20 +240,35 @@ function scheduleCompareAssets(versionA, versionB) {
     } else {
       scheduleImageElement(thumbnailImages[index], viewA.render, token);
     }
-    imageScheduler.load(viewA.render);
-    imageScheduler.load(viewB.render);
-    imageScheduler.load(viewA.geometry);
-    imageScheduler.load(viewB.geometry);
+    [viewA.render, viewB.render, viewA.geometry, viewB.geometry]
+      .filter(Boolean)
+      .forEach((path) => imageScheduler.load(path));
   });
   imageScheduler.prioritize([
     state.compareSource === "render" ? currentA.render : currentA.geometry,
     state.compareSource === "render" ? currentB.render : currentB.geometry
-  ]);
+  ].filter(Boolean));
+}
+
+function guideMarkup(guide, className = "") {
+  if (!guide.src) return "";
+  const label = guide.label || "";
+  return `<button class="guide ${className}" type="button" data-guide-src="${escapeHtml(guide.src)}" data-guide-label="${escapeHtml(label)}">
+    ${imageMarkup(guide.src, label, "", "loading=\"lazy\"")}
+    ${label ? `<span>${escapeHtml(label)}</span>` : ""}
+  </button>`;
+}
+
+function guideSectionMarkup(section, extraClass = "") {
+  return `<section class="guide-section ${extraClass}">
+    ${section.title ? `<h3 class="guide-section__title">${escapeHtml(section.title)}</h3>` : ""}
+    <div class="guide-grid ${extraClass ? "guide-grid--extra" : ""}">${section.images.map((image) => guideMarkup(image, [image.className, extraClass ? "guide--extra" : ""].filter(Boolean).join(" "))).join("")}</div>
+  </section>`;
 }
 
 function renderIndex() {
   elements.grid.innerHTML = versions.map((version) => `
-    <button class="version-card ${state.compareSelection.includes(version.id) ? "is-selected" : ""}" type="button" data-version-id="${escapeHtml(version.id)}" aria-pressed="${state.compareSelection.includes(version.id)}">
+    <button class="version-card version-card--${escapeHtml(version.id)} ${state.compareSelection.includes(version.id) ? "is-selected" : ""}" type="button" data-version-id="${escapeHtml(version.id)}" aria-pressed="${state.compareSelection.includes(version.id)}">
       ${imageMarkup(version.cover, `${version.name} cover`, "version-card__cover", "loading=\"lazy\"")}
       <span class="version-card__body">
         <h2>${escapeHtml(version.name)}</h2>
@@ -275,17 +295,22 @@ function renderViewer() {
       <span>${escapeHtml(item.name)}</span>
     </button>`).join("");
 
+  const baseSection = {
+    title: null,
+    images: [
+      { src: version.overview.render, label: "Overview — Render", className: "guide--overview" },
+      { src: version.overview.geometry, label: "Overview — Geometry", className: "guide--overview" },
+      { src: view.guides.top, label: "Top View", className: "guide--top" },
+      { src: view.guides.front, label: "Front View", className: "guide--front" },
+      { src: view.guides.side, label: "Side View", className: "guide--side" }
+    ].filter((image) => image.src)
+  };
+  const sections = version.overview.sections || [];
   elements.guides.innerHTML = [
-    { src: version.overview.render, label: "Overview — Render", className: "guide--overview" },
-    { src: version.overview.geometry, label: "Overview — Geometry", className: "guide--overview" },
-    { src: view.guides.top, label: "Top View", className: "guide--top" },
-    { src: view.guides.front, label: "Front View", className: "guide--front" },
-    { src: view.guides.side, label: "Side View", className: "guide--side" }
-  ].map((guide) => `
-    <button class="guide ${guide.className}" type="button" data-guide-src="${escapeHtml(guide.src)}" data-guide-label="${escapeHtml(guide.label)}">
-      ${imageMarkup(guide.src, guide.label, "", "loading=\"lazy\"")}
-      <span>${escapeHtml(guide.label)}</span>
-    </button>`).join("");
+    ...sections.filter((section) => section.position === 0).map((section) => guideSectionMarkup(section, "guide-section--extra")),
+    guideSectionMarkup(baseSection),
+    ...sections.filter((section) => section.position === 1).map((section) => guideSectionMarkup(section, "guide-section--extra"))
+  ].join("");
 
   elements.loading.hidden = false;
   elements.render.alt = `${version.name}, ${view.name}, final render`;

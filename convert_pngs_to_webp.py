@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Move source PNGs out of the deploy folder and create lossless WebPs."""
+"""Convert PNGs in public/ to lossless WebPs and move originals to public_pngs/."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
-DEFAULT_IMAGE_DIR = PROJECT_DIR / "public" / "images"
+DEFAULT_PUBLIC_DIR = PROJECT_DIR / "public"
 DEFAULT_PNG_DIR = PROJECT_DIR / "public_pngs"
 
 
@@ -21,14 +21,14 @@ def parse_args() -> argparse.Namespace:
         "path",
         nargs="?",
         type=Path,
-        default=DEFAULT_PNG_DIR,
-        help="PNG source directory or file (default: public_pngs)",
+        default=DEFAULT_PUBLIC_DIR,
+        help="Public directory containing PNGs (default: public)",
     )
     parser.add_argument(
         "--output",
         type=Path,
-        default=DEFAULT_IMAGE_DIR,
-        help="WebP output directory (default: public/images)",
+        default=DEFAULT_PUBLIC_DIR,
+        help="WebP output directory (default: public)",
     )
     parser.add_argument("--dry-run", action="store_true", help="List conversions without writing files")
     parser.add_argument("--skip-existing", action="store_true", help="Leave existing WebP files unchanged")
@@ -43,23 +43,6 @@ def find_pngs(path: Path) -> list[Path]:
     raise FileNotFoundError(f"Path does not exist: {path}")
 
 
-def move_pngs_from_output(output_dir: Path, source_dir: Path, dry_run: bool) -> int:
-    if not output_dir.is_dir() or output_dir.resolve() == source_dir.resolve():
-        return 0
-    moved = 0
-    for png in sorted(output_dir.rglob("*.png")):
-        relative_path = png.relative_to(output_dir)
-        destination = source_dir / relative_path
-        if destination.exists():
-            raise FileExistsError(f"Cannot move {png}: destination already exists at {destination}")
-        print(f"Would move: {png} -> {destination}" if dry_run else f"Moving: {png} -> {destination}")
-        if not dry_run:
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.move(str(png), str(destination))
-        moved += 1
-    return moved
-
-
 def main() -> int:
     args = parse_args()
     image_path = args.path if args.path.is_absolute() else PROJECT_DIR / args.path
@@ -68,17 +51,17 @@ def main() -> int:
         print("Error: cwebp is not installed or is not on PATH.", file=sys.stderr)
         return 1
     try:
-        moved = move_pngs_from_output(output_dir, image_path, args.dry_run)
-        if args.dry_run and moved:
-            print(f"Would move {moved} PNG file(s) into the source folder.")
         if not image_path.exists() and not args.dry_run:
             image_path.mkdir(parents=True, exist_ok=True)
         pngs = find_pngs(image_path)
+        if not pngs:
+            print(f"Warning: no PNG files found under {image_path}.", file=sys.stderr)
     except FileNotFoundError as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
 
     converted = 0
+    moved = 0
     skipped = 0
     for png in pngs:
         relative_path = png.relative_to(image_path) if image_path.is_dir() else Path(png.name)
@@ -98,11 +81,25 @@ def main() -> int:
         if result.returncode != 0:
             print(f"Failed to convert: {png}", file=sys.stderr)
             return result.returncode
+        backup = DEFAULT_PNG_DIR / relative_path
+        if backup.exists():
+            print(f"Backup already exists, leaving PNG in place: {backup}", file=sys.stderr)
+            return 1
+        print(f"Moving: {png} -> {backup}")
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        if not args.dry_run:
+            shutil.move(str(png), str(backup))
+        moved += 1
 
     action = "Would convert" if args.dry_run else "Converted"
     print(f"{action} {converted} PNG file(s) to lossless WebP.")
     if skipped:
         print(f"Skipped {skipped} existing WebP file(s).")
+    if moved:
+        print(f"Moved {moved} PNG backup file(s) to {DEFAULT_PNG_DIR}.")
+    if not args.dry_run:
+        generator = PROJECT_DIR / "generate_versions.py"
+        subprocess.run([sys.executable, str(generator)], check=True)
     return 0
 
 
