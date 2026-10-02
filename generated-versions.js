@@ -264,5 +264,106 @@ window.reviewVersions = [
         }
       }
     ]
+  },
+  {
+    "id": "version-04",
+    "name": "Version 04",
+    "description": ".",
+    "properties": [
+      {
+        "label": "Light position",
+        "value": "Table + Floor (top + bottom)"
+      },
+      {
+        "label": "Faceting Density Layout",
+        "value": "Low density / large faces (pavilion) → medium density / medium faces (girdle) → high density / small faces (crown) → highest density / smallest faces (table)"
+      },
+      {
+        "label": "Facets height / projection",
+        "value": "~14cm"
+      }
+    ],
+    "cover": "public/images/version-04/cover.webp",
+    "overview": {
+      "render": "public/images/version-04/overview/render.webp",
+      "geometry": "public/images/version-04/overview/geometry.webp",
+      "sections": [
+        {
+          "position": 0,
+          "title": "Light Position",
+          "images": [
+            {
+              "src": "public/images/version-04/overview/light_position-0/front_view.webp",
+              "label": "Front View"
+            },
+            {
+              "src": "public/images/version-04/overview/light_position-0/side_view.webp",
+              "label": "Side View"
+            },
+            {
+              "src": "public/images/version-04/overview/light_position-0/top_view.webp",
+              "label": "Top View"
+            }
+          ]
+        }
+      ]
+    },
+    "views": [
+      {
+        "id": "view-01",
+        "name": "View 01",
+        "render": "public/images/version-04/view-01/render.webp",
+        "geometry": "public/images/version-04/view-01/geometry.webp",
+        "guides": {
+          "top": "public/images/version-04/view-01/camera-top.webp",
+          "front": "public/images/version-04/view-01/camera-front.webp",
+          "side": "public/images/version-04/view-01/camera-side.webp"
+        }
+      },
+      {
+        "id": "view-02",
+        "name": "View 02",
+        "render": "public/images/version-04/view-02/render.webp",
+        "geometry": "public/images/version-04/view-02/geometry.webp",
+        "guides": {
+          "top": "public/images/version-04/view-02/camera-top.webp",
+          "front": "public/images/version-04/view-02/camera-front.webp",
+          "side": "public/images/version-04/view-02/camera-side.webp"
+        }
+      },
+      {
+        "id": "view-03",
+        "name": "View 03",
+        "render": "public/images/version-04/view-03/render.webp",
+        "geometry": "public/images/version-04/view-03/geometry.webp",
+        "guides": {
+          "top": "public/images/version-04/view-03/camera-top.webp",
+          "front": "public/images/version-04/view-03/camera-front.webp",
+          "side": "public/images/version-04/view-03/camera-side.webp"
+        }
+      },
+      {
+        "id": "view-04",
+        "name": "View 04",
+        "render": "public/images/version-04/view-04/render.webp",
+        "geometry": "public/images/version-04/view-04/geometry.webp",
+        "guides": {
+          "top": "public/images/version-04/view-04/camera-top.webp",
+          "front": "public/images/version-04/view-04/camera-front.webp",
+          "side": "public/images/version-04/view-04/camera-side.webp"
+        }
+      },
+      {
+        "id": "view-05",
+        "name": "View 05",
+        "render": "public/images/version-04/view-05/render.webp",
+        "geometry": "public/images/version-04/view-05/geometry.webp",
+        "guides": {
+          "top": "public/images/version-04/view-05/camera-top.webp",
+          "front": "public/images/version-04/view-05/camera-front.webp",
+          "side": "public/images/version-04/view-05/camera-side.webp"
+        }
+      }
+    ]
   }
 ];

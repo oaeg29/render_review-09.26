@@ -40,7 +40,7 @@ button { cursor: pointer; }
 .compare-toolbar > span { color: var(--muted); font-size: .78rem; }
 .compare-toolbar__actions { display: flex; gap: 8px; }
 
-.version-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+.version-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; }
 
 .version-card { align-items: stretch; background: var(--surface); border: 1px solid var(--border); border-radius: 2px; color: inherit; display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden; padding: 0; text-align: left; transition: background-color .14s ease, border-color .14s ease; width: 100%; }
 .version-card:hover { background: var(--surface-raised); border-color: var(--border-strong); }

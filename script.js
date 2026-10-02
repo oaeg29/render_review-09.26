@@ -224,22 +224,32 @@ function scheduleViewerAssets(version) {
   imageScheduler.prioritize(priorityPaths);
 }
 
+function compareEntries(version) {
+  return [
+    ...version.views,
+    {
+      id: `${version.id}-overview`,
+      name: "Overview",
+      render: version.overview?.render || null,
+      geometry: version.overview?.geometry || null
+    }
+  ];
+}
+
 function scheduleCompareAssets(versionA, versionB) {
   const token = ++viewerLoadToken;
-  const viewCount = Math.min(versionA.views.length, versionB.views.length);
+  const entriesA = compareEntries(versionA);
+  const entriesB = compareEntries(versionB);
+  const viewCount = Math.min(entriesA.length, entriesB.length);
   const orderedIndexes = Array.from({ length: viewCount }, (_, index) => (state.compareView + index) % viewCount);
   const thumbnailImages = [...elements.compareThumbnails.querySelectorAll("img[data-image-src]")];
-  const currentA = versionA.views[state.compareView];
-  const currentB = versionB.views[state.compareView];
+  const currentA = entriesA[state.compareView];
+  const currentB = entriesB[state.compareView];
 
   orderedIndexes.forEach((index) => {
-    const viewA = versionA.views[index];
-    const viewB = versionB.views[index];
-    if (index === state.compareView) {
-      scheduleImageElement(thumbnailImages[index], viewA.render, token);
-    } else {
-      scheduleImageElement(thumbnailImages[index], viewA.render, token);
-    }
+    const viewA = entriesA[index];
+    const viewB = entriesB[index];
+    scheduleImageElement(thumbnailImages[index], viewA.render || viewA.geometry, token);
     [viewA.render, viewB.render, viewA.geometry, viewB.geometry]
       .filter(Boolean)
       .forEach((path) => imageScheduler.load(path));
@@ -330,8 +340,8 @@ function renderViewer() {
 function updateCompareComparison() {
   const [versionA, versionB] = state.compareVersions;
   if (!versionA || !versionB) return;
-  const viewA = versionA.views[state.compareView];
-  const viewB = versionB.views[state.compareView];
+  const viewA = compareEntries(versionA)[state.compareView];
+  const viewB = compareEntries(versionB)[state.compareView];
   const source = state.compareSource;
   const wipe = state.compareWipePosition;
   const leftPath = viewA[source];
@@ -362,13 +372,15 @@ function updateCompareComparison() {
 
 function renderCompareViewer() {
   const [versionA, versionB] = state.compareVersions;
-  const viewCount = Math.min(versionA.views.length, versionB.views.length);
+  const entriesA = compareEntries(versionA);
+  const entriesB = compareEntries(versionB);
+  const viewCount = Math.min(entriesA.length, entriesB.length);
   state.compareView = (state.compareView + viewCount) % viewCount;
   elements.compareVersionAName.textContent = versionA.name;
   elements.compareVersionBName.textContent = versionB.name;
-  elements.compareThumbnails.innerHTML = versionA.views.slice(0, viewCount).map((view, index) => `
+  elements.compareThumbnails.innerHTML = entriesA.slice(0, viewCount).map((view, index) => `
     <button class="thumbnail ${index === state.compareView ? "is-active" : ""}" type="button" data-compare-view-index="${index}" aria-label="Select ${escapeHtml(view.name)}" aria-pressed="${index === state.compareView}">
-      ${imageMarkup(view.render, "", "", "loading=\"lazy\"")}
+      ${imageMarkup(view.render || view.geometry, "", "", "loading=\"lazy\"")}
       <span>${escapeHtml(view.name)}</span>
     </button>`).join("");
   scheduleCompareAssets(versionA, versionB);
@@ -377,7 +389,7 @@ function renderCompareViewer() {
 
 function setCompareView(index) {
   const [versionA, versionB] = state.compareVersions;
-  const viewCount = Math.min(versionA.views.length, versionB.views.length);
+  const viewCount = Math.min(compareEntries(versionA).length, compareEntries(versionB).length);
   state.compareView = (index + viewCount) % viewCount;
   renderCompareViewer();
 }
