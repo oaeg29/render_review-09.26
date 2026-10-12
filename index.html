@@ -27,6 +27,13 @@
           </div>
         </header>
         <div id="version-grid" class="version-grid"></div>
+        <section id="exterior-floor-section" class="content-section" aria-labelledby="exterior-floor-title">
+          <header class="content-section__header">
+            <h2 id="exterior-floor-title">exterior floor</h2>
+            <p>Preview the exterior floor under different surface colours.</p>
+          </header>
+          <div id="exterior-floor-grid" class="version-grid"></div>
+        </section>
       </section>
 
       <section id="viewer" class="viewer" aria-hidden="true" hidden>
@@ -44,8 +51,8 @@
               <img id="geometry-image" class="comparison-image" alt="Geometry view" />
               <img id="render-image" class="comparison-image render-layer" alt="Final render" />
               <div id="wipe-divider" class="wipe-divider" aria-hidden="true"></div>
-              <div class="comparison-label comparison-label--left">Render</div>
-              <div class="comparison-label comparison-label--right">Geometry</div>
+              <div id="comparison-left-label" class="comparison-label comparison-label--left">Render</div>
+              <div id="comparison-right-label" class="comparison-label comparison-label--right">Geometry</div>
               <div id="comparison-loading" class="comparison-loading" hidden>Loading images…</div>
             </div>
 
@@ -54,14 +61,26 @@
                 <span>Wipe position</span>
                 <input id="wipe-slider" type="range" min="0" max="100" value="97" />
               </label>
+              <button id="viewer-source-toggle" class="button" type="button" aria-pressed="false" hidden>Show Geometry</button>
             </div>
 
-            <div id="thumbnail-strip" class="thumbnail-strip" aria-label="Available views"></div>
+            <div class="view-navigation">
+              <div id="thumbnail-strip" class="thumbnail-strip" aria-label="Available views"></div>
+              <button id="crowd-toggle" class="crowd-toggle" type="button" role="switch" aria-checked="false" aria-label="Crowd" hidden>
+                <span>Crowd</span>
+                <span class="crowd-toggle__track" aria-hidden="true"></span>
+                <span id="crowd-toggle-status" class="crowd-toggle__status" aria-hidden="true">Off</span>
+              </button>
+            </div>
           </section>
 
-          <aside class="guide-column" aria-label="Guide images">
-            <h2>Guides</h2>
+          <aside id="viewer-side-panel" class="guide-column" aria-label="Guide images">
+            <h2 id="viewer-side-title">Guides</h2>
             <div id="guide-grid" class="guide-sections"></div>
+            <div id="swatch-panel" class="swatch-panel" hidden>
+              <p id="swatch-instructions" class="swatch-instructions"></p>
+              <div id="swatch-list" class="swatch-list"></div>
+            </div>
           </aside>
         </div>
       </section>

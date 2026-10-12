@@ -52,6 +52,32 @@ You only need `python3 generate_versions.py` directly when the WebP files alread
 
 The generator discovers every folder named `version-NN` under `public/images`, so a new version is included without editing JavaScript. This scan happens during the site-generation step and the generated file is what the hosted static site reads. A normal static host cannot inspect its own folders from browser JavaScript, so `generated-versions.js` must be regenerated and pushed whenever image folders change.
 
+### Exterior floor previews
+
+Exterior-floor cards are discovered from `public/images/exterior-floor/`. The first card can use this structure:
+
+```text
+exterior-floor/
+  white-grey/
+    swatches/
+      white/
+        view-01/render.webp
+        view-02/render.webp
+        ...
+      grey/
+        view-01/render.webp
+        ...
+      dark-grey/
+        view-01/render.webp
+        ...
+    geometry/
+      view-01.webp
+      view-02.webp
+      ...
+```
+
+Each swatch can supply a different number of views; only render files that exist are included. The geometry folder supplies the shared geometry image for each view. Selecting a swatch limits navigation to its available views, and comparing two swatches limits navigation to their shared views. The colour labels, CSS swatch colours, and ordering are configured in `script.js` in `exteriorFloorSwatchConfig`. Add another card by adding another folder under `exterior-floor/`, then run `python3 generate_versions.py` or `python3 convert_pngs_to_webp.py` after adding PNG sources.
+
 ### Overview guide sections
 
 The two base overview images remain `overview/render.webp` and `overview/geometry.webp`. Additional direct subfolders inside `overview/` are optional sections:
@@ -69,6 +95,21 @@ overview/
 Only folders ending in `-0` or `-1` are included. `-0` sections appear above the base guides and `-1` sections appear below them. A folder without either suffix is ignored. Folder and image names are formatted automatically (`light_position` becomes `Light Position`, and `front-view` becomes `Front View`). Put `-n` immediately before the ordering suffix to hide the section title, and include `-n` in an image filename to hide that image's label.
 
 Render and geometry files may have different native resolutions, but must share camera, framing, crop, and aspect ratio.
+
+### Version 6 crowd variants
+
+Version 6 opens with crowd off. Its `Crowd: Off / On` button switches the main render, view thumbnails, and the two crowd overview guides together. Place the overview pairs under `public/images/version-06/overview/crowd-0/`:
+
+```text
+no-crowd-view-01.webp
+no-crowd-view-02.webp
+crowd-view-01.webp
+crowd-view-02.webp
+```
+
+Add `render-c.webp` beside `render.webp` in each Version 6 `view-NN/` folder. Crowd mode falls back to the normal render when a crowd variant is missing. Geometry and camera guides are shared. Global version comparison uses normal renders.
+
+You can add the same filenames with a `.png` extension and run `python3 convert_pngs_to_webp.py`; conversion automatically regenerates the manifest. When adding WebPs directly, run `python3 generate_versions.py`.
 
 ## Lossless image tools
 
