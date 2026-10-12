@@ -46,6 +46,17 @@ button { cursor: pointer; }
 .content-section__header h2 { color: var(--accent); font-size: .9rem; font-weight: 600; letter-spacing: .1em; margin: 0; text-transform: uppercase; }
 .content-section__header h2::before { color: var(--muted); content: "# "; }
 .content-section__header p { color: var(--muted); font-size: .72rem; margin: 0; }
+.resource-links { margin: 0; padding-left: 2.2ch; }
+.resource-links li { padding-left: 8px; }
+.resource-links li + li { margin-top: 24px; }
+.resource-links li::marker { color: var(--accent); font-size: .85rem; }
+.resource-links h3 { color: var(--accent); font-size: .85rem; font-weight: 600; margin: 0 0 8px; }
+.resource-links .resource-title--important { background: var(--surface-raised); border: 1px solid var(--border-strong); border-left: 3px solid var(--accent); padding: 7px 10px; width: fit-content; max-width: 100%; }
+.resource-links a { align-items: start; color: #a9c8bc; display: inline-flex; font-size: .74rem; gap: 8px; max-width: 100%; text-decoration: none; }
+.resource-links a span { min-width: 0; overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: 4px; }
+.resource-link-icon { flex: 0 0 16px; height: 16px; margin-top: 1px; width: 16px; }
+.resource-links a:hover { color: #d0e9de; }
+.resource-links a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 
 .version-card { align-items: stretch; background: var(--surface); border: 1px solid var(--border); border-radius: 2px; color: inherit; display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden; padding: 0; text-align: left; transition: background-color .14s ease, border-color .14s ease; width: 100%; }
 .version-card:hover { background: var(--surface-raised); border-color: var(--border-strong); }
